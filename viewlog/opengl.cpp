@@ -1,4 +1,4 @@
-#include <glad/gl.h>
+#include "glad.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 
@@ -11,7 +11,7 @@ int main( void ) {
 
   // Request an OpenGL 4.1, core, context from GLFW.
   glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
-  glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
+  glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 6 );
   glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
   glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
@@ -25,12 +25,13 @@ int main( void ) {
   glfwMakeContextCurrent( window );
                                   
   // Start Glad, so we can call OpenGL functions.
-  int version_glad = gladLoadGL( glfwGetProcAddress );
+  //int version_glad = gladLoadGL( glfwGetProcAddress );
+  int version_glad = gladLoadGL( );
   if ( version_glad == 0 ) {
     fprintf( stderr, "ERROR: Failed to initialize OpenGL context.\n" );
     return 1;
   }
-  printf( "Loaded OpenGL %i.%i\n", GLAD_VERSION_MAJOR( version_glad ), GLAD_VERSION_MINOR( version_glad ) );
+  //  printf( "Loaded OpenGL %i.%i\n", GLAD_VERSION_MAJOR( version_glad ), GLAD_VERSION_MINOR( version_glad ) );
 
   // Try to call some OpenGL functions, and print some more version info.
   printf( "Renderer: %s.\n", glGetString( GL_RENDERER ) );
