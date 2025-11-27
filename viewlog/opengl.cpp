@@ -70,6 +70,21 @@ GLuint getVertexShader2() {
   return vs;
 }
 
+GLuint getVertexShader3() {
+  const char* vertex_shader =
+    "#version 410 core\n"
+    "in vec3 vp;"
+    "void main() {"
+    "  gl_Position = vec4( vp, 1.0 );"
+    "}";
+
+  GLuint vs = glCreateShader( GL_VERTEX_SHADER );
+  glShaderSource( vs, 1, &vertex_shader, NULL );
+  glCompileShader( vs );
+  return vs;
+}
+
+
 
 GLuint getFragmentShader() {
   const char* fragment_shader =
@@ -99,6 +114,21 @@ GLuint getFragmentShader2() {
   return fs;
 }
 
+GLuint getFragmentShader3() {
+  const char* fragment_shader =
+    "#version 410 core\n"
+    "out vec4 frag_colour;"
+    "void main() {"
+    "  frag_colour = vec4( 0.3, 0.3, 1.0, 1.0 );"
+    "}";
+ 
+  GLuint fs = glCreateShader( GL_FRAGMENT_SHADER );
+  glShaderSource( fs, 1, &fragment_shader, NULL );
+  glCompileShader( fs );
+  return fs;
+}
+
+
 bool flag = true;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -117,6 +147,8 @@ void doSomeGL(GLFWwindow* window) {
     -0.5f, -0.5f,  0.0f  // x,y,z of third point.
   };
 
+  float da_points[] = {.0f, .0f, .0f, .1f, .1f, .1f, .2f, .2f, .2f, .3f, .3f, .3f};
+  
   GLint zog[] = {1, 4, 6};
   
   GLuint vbo = 0;
@@ -129,6 +161,12 @@ void doSomeGL(GLFWwindow* window) {
   glBindBuffer( GL_ARRAY_BUFFER, vbzo );
   glBufferData( GL_ARRAY_BUFFER, 3 * sizeof( int ), zog, GL_STATIC_DRAW );
 
+  GLuint vbo_points = 0;
+  glGenBuffers( 1, &vbo_points );
+  glBindBuffer( GL_ARRAY_BUFFER, vbo_points );
+  glBufferData( GL_ARRAY_BUFFER, 12 * sizeof( float ), da_points, GL_STATIC_DRAW );
+
+  
   
   GLuint vao = 0;
   glGenVertexArrays( 1, &vao );
@@ -143,11 +181,22 @@ void doSomeGL(GLFWwindow* window) {
   glBindBuffer( GL_ARRAY_BUFFER, vbzo );
   glVertexAttribIPointer( 1, 1, GL_INT, 0, NULL );
 
+  GLuint vao_points = 0;
+  glGenVertexArrays( 1, &vao_points );
+  glBindVertexArray( vao_points );
+
+  glEnableVertexAttribArray( 0 );
+  glBindBuffer( GL_ARRAY_BUFFER, vbo_points );
+  glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, NULL );
+
+  
 
   auto vs = getVertexShader();
   auto vs2 = getVertexShader2();
+  auto vs3 = getVertexShader3();
   auto fs = getFragmentShader();
   auto fs2 = getFragmentShader2();
+  auto fs3 = getFragmentShader3();
   
   GLuint shader_program = glCreateProgram();
   glAttachShader( shader_program, fs );
@@ -160,6 +209,12 @@ void doSomeGL(GLFWwindow* window) {
   glAttachShader( shader_program2, fs2 );
   glAttachShader( shader_program2, vs2 );
   glLinkProgram( shader_program2 );
+
+  GLuint shader_program3 = glCreateProgram();
+  glAttachShader( shader_program3, fs3 );
+  glAttachShader( shader_program3, vs3 );
+  glLinkProgram( shader_program3 );
+
   
   glfwSetKeyCallback(window, key_callback); // Register the key callback
 
@@ -183,8 +238,18 @@ void doSomeGL(GLFWwindow* window) {
     glCheckError();
  
     //draw again with other shader
-    //glUseProgram( shader_program2 );
-    //glDrawArrays( GL_TRIANGLES, 0, 3 );
+    glUseProgram( shader_program2 );
+    glDrawArrays( GL_TRIANGLES, 0, 3 );
+ 
+
+    //points test
+    glBindVertexArray( vao_points );
+
+    
+   //draw again with other shader
+    glUseProgram( shader_program3 );
+    glPointSize(10.);
+    glDrawArrays( GL_POINTS, 0, 8 );
  
     
     // Put the stuff we've been drawing onto the visible area.
