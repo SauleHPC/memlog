@@ -39,19 +39,39 @@ public:
   }
 };
 
-bool flag = true;
 
-Camera cam;
+std::vector<std::function<void (GLFWwindow* , int , int , int , int )> > key_callbacks;
+
+void register_key_callback(std::function<void (GLFWwindow* , int , int , int , int )> f) {
+  key_callbacks.push_back(f);
+}
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
-    std::cout << "Key: " << key << ", Action: " << action << std::endl;
-    if (action == 1)
-      flag = !flag;
+
+    for (auto f : key_callbacks)
+      f(window, key, scancode, action, mods);
+}
+
+void doSomeGL(GLFWwindow* window) {
 
 
+  float da_points[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.f, 0.f};
+
+  GL2DPointsBasic viewport (da_points, sizeof(da_points)/2/sizeof(da_points[0]));
+
+  
+  glfwSetKeyCallback(window, key_callback); // Register the key callback
+
+  register_key_callback ([](GLFWwindow* window, int key, int scancode, int action, int mods) -> void{
+    std::cout<<"callback : "<<key<<'\n';
+  });
+
+  Camera cam;
+
+  register_key_callback ([&cam](GLFWwindow* window, int key, int scancode, int action, int mods) -> void{
     if (key == GLFW_KEY_W && action == GLFW_PRESS) {
       cam.wow();
     }
@@ -76,19 +96,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_X && action == GLFW_PRESS) {
       cam.zoom(1/1.1);
     }
-    
-}
-
-void doSomeGL(GLFWwindow* window) {
-
-
-  float da_points[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.f, 0.f};
-
-  GL2DPointsBasic viewport (da_points, sizeof(da_points)/2/sizeof(da_points[0]));
-
+  });
   
-  glfwSetKeyCallback(window, key_callback); // Register the key callback
-
+  
   std::cout<<"GO!\n";
 
   loglibrary::log l = loglibrary::log::parse_log("../log-1000");
