@@ -47,12 +47,8 @@ void register_key_callback(std::function<void (GLFWwindow* , int , int , int , i
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    }
-
-    for (auto f : key_callbacks)
-      f(window, key, scancode, action, mods);
+  for (auto f : key_callbacks)
+    f(window, key, scancode, action, mods);
 }
 
 void doSomeGL(GLFWwindow* window) {
@@ -66,7 +62,9 @@ void doSomeGL(GLFWwindow* window) {
   glfwSetKeyCallback(window, key_callback); // Register the key callback
 
   register_key_callback ([](GLFWwindow* window, int key, int scancode, int action, int mods) -> void{
-    std::cout<<"callback : "<<key<<'\n';
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+      glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
   });
 
   Camera cam;
