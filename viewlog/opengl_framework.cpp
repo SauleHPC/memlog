@@ -5,6 +5,7 @@
 #include "myglutils.hpp"
 #include "myglobjects.hpp"
 #include "myglobjects_points.hpp"
+#include "logs.hpp"
 
 GLuint getVertexShader() {
   const char* vertex_shader =
@@ -158,7 +159,35 @@ void doSomeGL(GLFWwindow* window) {
   glfwSetKeyCallback(window, key_callback); // Register the key callback
 
   std::cout<<"GO!\n";
+
+  log l = log::parse_log("../log-1000");
+  l.stats();
+  l.shift_offset();
+  l.stats();
+  std::vector<float> data;
+  for (const auto& a : l.entries) {
+    data.push_back((float)((size_t)a.ptr));
+  }
+
+  {
+    auto m = data[0];
+    for (auto& a: data) {
+      if (a > m)
+	m = a;
+    }
+    std::cout<<"max "<<m<<'\n';
+    for (auto& a: data) {
+      a /= m;
+      a *= .98;
+      a += .01;
+      //      std::cout<<a<<"\n";
+    }
+  }
   
+  GL1DPointsBasic log (&(data[0]), data.size());
+  log.setPointSize(1.);
+  log.setColor(1., 1., 1., 0.2);
+
   while ( !glfwWindowShouldClose( window ) ) {
     // Update window events.
     glfwPollEvents();
@@ -167,26 +196,26 @@ void doSomeGL(GLFWwindow* window) {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     
     // Put the shader program, and the VAO, in focus in OpenGL's state machine.
-    glUseProgram( shader_program );
-    glUniform1i( clicked_loc, (flag?1:0));
-    glBindVertexArray( vao );
+    //glUseProgram( shader_program );
+    //glUniform1i( clicked_loc, (flag?1:0));
+    //glBindVertexArray( vao );
     
     // Draw points 0-3 from the currently bound VAO with current in-use shader.
     //    glDrawArrays( GL_TRIANGLES, 0, 3 );
 
-    glCheckError();
+    //glCheckError();
  
     //draw again with other shader
-    glUseProgram( shader_program2 );
+    //glUseProgram( shader_program2 );
     //glDrawArrays( GL_TRIANGLES, 0, 3 );
  
 
     //points test
 
-    mypts.render();
-    if (flag)
-      mypts1d.render();
-    
+    //mypts.render();
+    //if (flag)
+    //  mypts1d.render();
+    log.render();
  
     
     // Put the stuff we've been drawing onto the visible area.
