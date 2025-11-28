@@ -64,23 +64,30 @@ void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos) {
 
 }
 
-void queryViewport(GLFWwindow* window)
-{
-    // The viewport data is stored in an array of 4 integers:
-    // [0] = x_offset, [1] = y_offset, [2] = width, [3] = height
-    GLint viewport[4];
-    
-    // Query the current OpenGL viewport state
-    glGetIntegerv(GL_VIEWPORT, viewport);
 
-    std::cout << "\nCurrent Viewport State:" << std::endl;
-    std::cout << "  X Offset (Bottom-Left): " << viewport[0] << std::endl;
-    std::cout << "  Y Offset (Bottom-Left): " << viewport[1] << std::endl;
-    std::cout << "  Width: " << viewport[2] << std::endl;
-    std::cout << "  Height: " << viewport[3] << std::endl;
-    
-    // Note: The OpenGL Y-axis is inverted relative to typical screen coordinates.
-    // The viewport's (0, 0) is the bottom-left corner of the window's OpenGL context.
+//transform screen coordinate to viewport normalized [-1;1]
+std::tuple<float, float> screenPosToViewportNormalized(GLFWwindow* window, int x, int y) {
+  //screen coordinates are rooted top left
+  int window_width, window_height;
+  glfwGetWindowSize(window, &window_width, &window_height);
+  
+  GLint viewport[4]; //the viewport is rooted bottom-left
+  glGetIntegerv(GL_VIEWPORT, viewport);
+
+  //in bottom left coordinate
+  int x1 = x;
+  int y1 = window_height-y;
+
+  //in viewport pixel coordinate
+  int x2 = x1 - viewport[0];
+  int y2 = y1 - viewport[1];
+
+  //in viewport relative in [0;1]
+  float x3 = (float)x2/viewport[2];
+  float y3 = (float)y2/viewport[3] ;
+
+  //convert to [-1;1]
+  return {2*x3-1, 2*y3-1};
 }
 
 void doSomeGL(GLFWwindow* window) {
@@ -94,8 +101,9 @@ void doSomeGL(GLFWwindow* window) {
   glfwSetCursorPosCallback(window, mouse_pos_callback);
 
   register_mouse_pos_callback([](GLFWwindow* window, int xpos, int ypos) {
-    std::cout<<xpos<<" "<<ypos<<'\n';
-    queryViewport(window);
+    auto [nx, ny] = screenPosToViewportNormalized(window, xpos, ypos);
+
+    std::cout<<xpos<<" "<<ypos<<" "<<nx<<" "<<ny<<'\n';
   });
   
   register_key_callback ([](GLFWwindow* window, int key, int scancode, int action, int mods) -> void{
