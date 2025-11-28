@@ -5,7 +5,7 @@ void glCheckError() {
     
     if (error != GL_NO_ERROR) {
       // An error occurred!
-      std::cerr << "OpenGL Error after glDrawArrays: " << error << std::endl;
+      std::cerr << "OpenGL Error: " << error << std::endl;
       // You can convert the error code (like 1282) to its symbolic name (GL_INVALID_OPERATION)
       // using a lookup table or debugging utility.
     }

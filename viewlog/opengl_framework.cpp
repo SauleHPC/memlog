@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <iostream>
 #include "myglutils.hpp"
+#include "myglobjects.hpp"
+#include "myglobjects_points.hpp"
 
 GLuint getVertexShader() {
   const char* vertex_shader =
@@ -73,90 +75,6 @@ GLuint getFragmentShader2() {
 
 
 
-
-class GLObjectBase {
-public:
-  virtual ~GLObjectBase() = default;
-  virtual void render() = 0;
-};
-
-
-class GL2DPointsBasic : public GLObjectBase {
-
-  GLuint getVertexShader3() {
-    const char* vertex_shader =
-      "#version 410 core\n"
-      "in vec3 vp;"
-      "void main() {"
-      "  gl_Position = vec4( vp, 1.0 );"
-      "}";
-    
-    GLuint vs = glCreateShader( GL_VERTEX_SHADER );
-    glShaderSource( vs, 1, &vertex_shader, NULL );
-    glCompileShader( vs );
-    return vs;
-  }
-  
-  GLuint getFragmentShader3() {
-    const char* fragment_shader =
-      "#version 410 core\n"
-      "out vec4 frag_colour;"
-      "void main() {"
-      "  frag_colour = vec4( 0.3, 0.3, 1.0, 1.0 );"
-      "}";
-    
-    GLuint fs = glCreateShader( GL_FRAGMENT_SHADER );
-    glShaderSource( fs, 1, &fragment_shader, NULL );
-    glCompileShader( fs );
-    return fs;
-  }
-
-  
-  GLuint shader_program3;
-  GLuint vao_points;
-public:
-  GL2DPointsBasic(float* data, size_t nbpoints) {
-    
-    GLuint vbo_points = 0;
-    glGenBuffers( 1, &vbo_points );
-    glBindBuffer( GL_ARRAY_BUFFER, vbo_points );
-    glBufferData( GL_ARRAY_BUFFER, 2* nbpoints * sizeof( float ), data, GL_STATIC_DRAW );
-    
-    vao_points = 0;
-    glGenVertexArrays( 1, &vao_points );
-    glBindVertexArray( vao_points );
-    
-    glEnableVertexAttribArray( 0 );
-    glBindBuffer( GL_ARRAY_BUFFER, vbo_points );
-    glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 0, NULL );
-
-    auto vs3 = getVertexShader3();
-    auto fs3 = getFragmentShader3();
-
-    this->shader_program3 = glCreateProgram();
-    glAttachShader( shader_program3, fs3 );
-    glAttachShader( shader_program3, vs3 );
-    glLinkProgram( shader_program3 );
-
-  
-  }
-
-
-  virtual void render() {
-    //draw again with other shader
-    glUseProgram( shader_program3 );
-    glBindVertexArray( vao_points );
-	
-    glPointSize(10.);
-    glDrawArrays( GL_POINTS, 0, 8 );
-
-  }
-  
-  virtual ~GL2DPointsBasic() {
-    //this gotta leak like crazy
-  }
-  
-};
 
 
 bool flag = true;
@@ -230,6 +148,11 @@ void doSomeGL(GLFWwindow* window) {
   float da_points[] = {.0f, .0f, .0f, .1f, .1f, .1f, .2f, .2f, .2f, .3f, .3f, .3f};
 
   GL2DPointsBasic mypts (da_points, sizeof(da_points)/2/sizeof(da_points[0]));
+
+  float da_1dpoints[] = {.0f, .025f, .05f, .1f, .15f, .2f, .25f, .3f};
+  
+  GL1DPointsBasic mypts1d (da_1dpoints, sizeof(da_1dpoints)/sizeof(da_1dpoints[0]));
+
   
   
   glfwSetKeyCallback(window, key_callback); // Register the key callback
@@ -249,18 +172,20 @@ void doSomeGL(GLFWwindow* window) {
     glBindVertexArray( vao );
     
     // Draw points 0-3 from the currently bound VAO with current in-use shader.
-    glDrawArrays( GL_TRIANGLES, 0, 3 );
+    //    glDrawArrays( GL_TRIANGLES, 0, 3 );
 
     glCheckError();
  
     //draw again with other shader
     glUseProgram( shader_program2 );
-    glDrawArrays( GL_TRIANGLES, 0, 3 );
+    //glDrawArrays( GL_TRIANGLES, 0, 3 );
  
 
     //points test
 
     mypts.render();
+    if (flag)
+      mypts1d.render();
     
  
     
