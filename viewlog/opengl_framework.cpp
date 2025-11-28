@@ -9,78 +9,39 @@
 #include "myglobjects_points.hpp"
 #include "logs.hpp"
 
-GLuint getVertexShader() {
-  const char* vertex_shader =
-    "#version 410 core\n"
-    "layout (location=0) in vec3 vp;"
-    "layout (location=1) in int zorglub;"
-    "uniform int clicked;"
-    "void main() {"
-    "  gl_Position = vec4( vp, 1.0 );"
-    "  gl_Position.x += clicked * .3;"
-    "  gl_Position.x += zorglub * .3 ;"
-    "  "
-    "}";
 
-  GLuint vs = glCreateShader( GL_VERTEX_SHADER );
-  glShaderSource( vs, 1, &vertex_shader, NULL );
-  glCompileShader( vs );
-  checkShaderError(vs);
-  return vs;
-}
+class Camera {
+  glm::mat4 camera_matrix;
+public:
+  Camera()
+    :camera_matrix(glm::mat4(1.0))
+  {}
 
+  const glm::mat4& getMatrix() const
+  {return camera_matrix;}
 
-GLuint getVertexShader2() {
-  const char* vertex_shader =
-    "#version 410 core\n"
-    "in vec3 vp;"
-    "void main() {"
-    "  gl_Position = vec4( vp, 1.0 );"
-    "  gl_Position.x += .5; "
-    "  gl_Position.y += .5; "
-    "}";
+  void reset() {
+    camera_matrix = glm::mat4(1.0);
+  }
 
-  GLuint vs = glCreateShader( GL_VERTEX_SHADER );
-  glShaderSource( vs, 1, &vertex_shader, NULL );
-  glCompileShader( vs );
-  return vs;
-}
+  void wow() {
+    camera_matrix = glm::mat4(0.5f, 0., 0., 0.,
+			      0., 0.5f, 0., 0.,
+			      0., 0., 1.f, 0.,
+			      0., 0., 0., 1.f);
+  }
 
-
-
-GLuint getFragmentShader() {
-  const char* fragment_shader =
-    "#version 410 core\n"
-    "out vec4 frag_colour;"
-    "void main() {"
-    "  frag_colour = vec4( 1.0, 0.0, 0.5, 1.0 );"
-    "}";
- 
-  GLuint fs = glCreateShader( GL_FRAGMENT_SHADER );
-  glShaderSource( fs, 1, &fragment_shader, NULL );
-  glCompileShader( fs );
-  return fs;
-}
-
-GLuint getFragmentShader2() {
-  const char* fragment_shader =
-    "#version 410 core\n"
-    "out vec4 frag_colour;"
-    "void main() {"
-    "  frag_colour = vec4( 1.0, 1.0, 0.5, 1.0 );"
-    "}";
- 
-  GLuint fs = glCreateShader( GL_FRAGMENT_SHADER );
-  glShaderSource( fs, 1, &fragment_shader, NULL );
-  glCompileShader( fs );
-  return fs;
-}
-
-
-
-
+  void translate(const glm::vec3& vec) {
+    camera_matrix = camera_matrix * glm::translate(glm::mat4(1.0), vec);
+  }
+  void zoom(const float& zoomlevel) {
+    camera_matrix = camera_matrix * glm::scale(glm::mat4(1.0), glm::vec3(zoomlevel, zoomlevel, 1.));
+  }
+};
 
 bool flag = true;
+
+Camera cam;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -89,6 +50,33 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     std::cout << "Key: " << key << ", Action: " << action << std::endl;
     if (action == 1)
       flag = !flag;
+
+
+    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+      cam.wow();
+    }
+    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+      cam.reset();
+    }
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+      cam.translate(glm::vec3(+0.1, 0., 0.));
+    }
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+      cam.translate(glm::vec3(-0.1, 0., 0.));
+    }
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
+      cam.translate(glm::vec3(0., 0.1, 0.));
+    }
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
+      cam.translate(glm::vec3(0., -0.1, 0.));
+    }
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+      cam.zoom(1.1);
+    }
+    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+      cam.zoom(1/1.1);
+    }
+    
 }
 
 void doSomeGL(GLFWwindow* window) {
@@ -107,7 +95,7 @@ void doSomeGL(GLFWwindow* window) {
   l.stats();
   l.shift_offset();
   l.stats();
-  std::vector<float> data;
+  std::vector<float> data; //data will be a [0;1] encoding of the log
   for (const auto& a : l.entries) {
     data.push_back((float)((size_t)a.ptr));
   }
@@ -131,6 +119,7 @@ void doSomeGL(GLFWwindow* window) {
   log.setPointSize(1.);
   log.setColor(1., 1., 1., 0.2);
 
+  //Full screening the plot
   {
     glm::mat4 Model;
     Model = glm::translate(glm::mat4(1.0), glm::vec3(-.5, -.5, 0.));
@@ -145,14 +134,10 @@ void doSomeGL(GLFWwindow* window) {
     
     // Wipe the drawing surface clear.
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    log.setCamera(cam.getMatrix());
     
- 
-
-    //points test
-
     viewport.render();
-    //if (flag)
-    //  mypts1d.render();
     log.render();
  
     

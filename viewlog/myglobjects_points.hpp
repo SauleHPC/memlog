@@ -92,9 +92,10 @@ class GL1DPointsBasic : public GLObjectBase {
       "in float val;"
       "uniform float total;"
       "uniform mat4 model_transform;"
+      "uniform mat4 camera_transform;"
       "void main() {"
       "  vec4 base_position = vec4( float(gl_VertexID)/float(total) , val , 0. , 1.0 );"
-      "  gl_Position =  model_transform * base_position;"
+      "  gl_Position =  camera_transform * model_transform * base_position;"
       "}";
     
     GLuint vs = glCreateShader( GL_VERTEX_SHADER );
@@ -128,6 +129,7 @@ class GL1DPointsBasic : public GLObjectBase {
   GLint nbpoints_loc;
   GLint color_loc;
   GLint model_transform_loc;
+  GLint camera_transform_loc;
   GLfloat pointSize;
   float color[4];
 public:
@@ -184,6 +186,17 @@ public:
       std::cerr<<"GL_INVALID_OPERATION"<<'\n';
     }
 
+    camera_transform_loc = glGetUniformLocation( shader_program, "camera_transform" );
+    if (camera_transform_loc == -1) {
+      std::cerr<<"can't find location"<<'\n';
+    }
+    if (camera_transform_loc == GL_INVALID_VALUE) {
+      std::cerr<<"GL_INVALID_VALUE"<<'\n';
+    }
+    if (camera_transform_loc == GL_INVALID_OPERATION) {
+      std::cerr<<"GL_INVALID_OPERATION"<<'\n';
+    }
+
     
     
     glUseProgram( shader_program );
@@ -203,6 +216,13 @@ public:
     glUniformMatrix4fv(model_transform_loc, 1, GL_FALSE, &tmat[0][0]);
   }
 
+  void setCamera(const glm::mat4& tmat) {
+    glUseProgram( shader_program );
+      
+    glUniformMatrix4fv(camera_transform_loc, 1, GL_FALSE, &tmat[0][0]);
+  }
+
+  
   void setColor(float r, float g, float b, float a) {
     color[0] = r;
     color[1] = g;
