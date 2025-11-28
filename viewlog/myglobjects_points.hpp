@@ -91,8 +91,10 @@ class GL1DPointsBasic : public GLObjectBase {
       "#version 410 core\n"
       "in float val;"
       "uniform float total;"
+      "uniform mat4 model_transform;"
       "void main() {"
-      "  gl_Position = vec4( float(gl_VertexID)/float(total) , val , 0. , 1.0 );"
+      "  vec4 base_position = vec4( float(gl_VertexID)/float(total) , val , 0. , 1.0 );"
+      "  gl_Position =  model_transform * base_position;"
       "}";
     
     GLuint vs = glCreateShader( GL_VERTEX_SHADER );
@@ -125,6 +127,7 @@ class GL1DPointsBasic : public GLObjectBase {
   GLuint nbpoints;
   GLint nbpoints_loc;
   GLint color_loc;
+  GLint model_transform_loc;
   GLfloat pointSize;
   float color[4];
 public:
@@ -162,10 +165,22 @@ public:
     }
 
     color_loc = glGetUniformLocation( shader_program, "color" );
-    if (nbpoints_loc == GL_INVALID_VALUE) {
+    if (color_loc == GL_INVALID_VALUE) {
       std::cerr<<"GL_INVALID_VALUE"<<'\n';
     }
-    if (nbpoints_loc == GL_INVALID_OPERATION) {
+    if (color_loc == GL_INVALID_OPERATION) {
+      std::cerr<<"GL_INVALID_OPERATION"<<'\n';
+    }
+
+
+    model_transform_loc = glGetUniformLocation( shader_program, "model_transform" );
+    if (model_transform_loc == -1) {
+      std::cerr<<"can't find location"<<'\n';
+    }
+    if (model_transform_loc == GL_INVALID_VALUE) {
+      std::cerr<<"GL_INVALID_VALUE"<<'\n';
+    }
+    if (model_transform_loc == GL_INVALID_OPERATION) {
       std::cerr<<"GL_INVALID_OPERATION"<<'\n';
     }
 
@@ -180,6 +195,12 @@ public:
   void setPointSize(GLfloat pointSize) {
     this->pointSize = pointSize;
     
+  }
+
+  void setTransform(const glm::mat4& tmat) {
+    glUseProgram( shader_program );
+      
+    glUniformMatrix4fv(model_transform_loc, 1, GL_FALSE, &tmat[0][0]);
   }
 
   void setColor(float r, float g, float b, float a) {

@@ -1,3 +1,5 @@
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp> 
 #include "glad.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
@@ -146,7 +148,7 @@ void doSomeGL(GLFWwindow* window) {
   glLinkProgram( shader_program2 );
 
 
-  float da_points[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f};
+  float da_points[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.f, 0.f};
 
   GL2DPointsBasic mypts (da_points, sizeof(da_points)/2/sizeof(da_points[0]));
 
@@ -160,7 +162,7 @@ void doSomeGL(GLFWwindow* window) {
 
   std::cout<<"GO!\n";
 
-  log l = log::parse_log("../log-1000");
+  loglibrary::log l = loglibrary::log::parse_log("../log-1000");
   l.stats();
   l.shift_offset();
   l.stats();
@@ -188,6 +190,14 @@ void doSomeGL(GLFWwindow* window) {
   log.setPointSize(1.);
   log.setColor(1., 1., 1., 0.2);
 
+  {
+    glm::mat4 Model;
+    Model = glm::translate(glm::mat4(1.0), glm::vec3(-.5, -.5, 0.));
+    Model = glm::scale(glm::mat4(1.0), glm::vec3(2., 2., 1.)) * Model;
+    log.setTransform(Model);
+  }
+
+  
   while ( !glfwWindowShouldClose( window ) ) {
     // Update window events.
     glfwPollEvents();
@@ -223,7 +233,24 @@ void doSomeGL(GLFWwindow* window) {
   }
 }
 
+
+
+
+int foo()
+{
+        glm::vec4 Position = glm::vec4(glm::vec3(0.0), 1.0);
+	glm::mat4 Model = glm::mat4(1.0);
+	Model = glm::translate(glm::mat4(1.0), glm::vec3(-.5, -.5, 0.));
+	glm::vec4 Transformed = Model * Position;
+	Position=Transformed;
+	std::cout<<Position[0]<<" "<<Position[1]<<" "<<Position[2]<<" "<<Position[3]<<"\n";
+        return 0;
+}
+
 int main( void ) {
+
+  //  std::cout<<foo();
+  
   // Start OpenGL context and OS window using the GLFW helper library.
   if ( !glfwInit() ) {
     fprintf( stderr, "ERROR: could not start GLFW3.\n" );

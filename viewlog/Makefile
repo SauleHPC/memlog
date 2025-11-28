@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++20 -I ./include
+CXXFLAGS=-std=c++20 -I ./include -I ~/prgs/glm-1.0.2
 LDFLAGS=-lglfw -lGL
 LD=g++
 
