@@ -51,9 +51,20 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     f(window, key, scancode, action, mods);
 }
 
+std::vector<std::function<void (GLFWwindow* , int , int )> > mouse_pos_callbacks;
+
+void register_mouse_pos_callback(std::function<void (GLFWwindow* , int , int )> f) {
+  mouse_pos_callbacks.push_back(f);
+}
+
+
+void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos) {
+  for (auto f : mouse_pos_callbacks)
+    f(window, xpos, ypos);
+
+}
+
 void doSomeGL(GLFWwindow* window) {
-
-
   float da_points[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.f, 0.f};
 
   GL2DPointsBasic viewport (da_points, sizeof(da_points)/2/sizeof(da_points[0]));
@@ -61,6 +72,12 @@ void doSomeGL(GLFWwindow* window) {
   
   glfwSetKeyCallback(window, key_callback); // Register the key callback
 
+  glfwSetCursorPosCallback(window, mouse_pos_callback);
+
+  register_mouse_pos_callback([](GLFWwindow* window, int xpos, int ypos) {
+    std::cout<<xpos<<" "<<ypos<<'\n';
+  });
+  
   register_key_callback ([](GLFWwindow* window, int key, int scancode, int action, int mods) -> void{
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
       glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -185,7 +202,7 @@ int main( void ) {
   glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
   // Create a window on the operating system, then tie the OpenGL context to it.
-  GLFWwindow* window = glfwCreateWindow( 1920, 1080, "Log Viz", NULL, NULL );
+  GLFWwindow* window = glfwCreateWindow( 800,600, "Log Viz", NULL, NULL );
   if ( !window ) {
     fprintf( stderr, "ERROR: Could not open window with GLFW3.\n" );
     glfwTerminate();
