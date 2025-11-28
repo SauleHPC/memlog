@@ -92,71 +92,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 void doSomeGL(GLFWwindow* window) {
-  float points[] = {
-    0.0f,  0.5f,  0.0f, // x,y,z of first point.
-    0.5f, -0.5f,  0.0f, // x,y,z of second point.
-    -0.5f, -0.5f,  0.0f  // x,y,z of third point.
-  };
-
-  
-  GLint zog[] = {1, 4, 6};
-  
-  GLuint vbo = 0;
-  glGenBuffers( 1, &vbo );
-  glBindBuffer( GL_ARRAY_BUFFER, vbo );
-  glBufferData( GL_ARRAY_BUFFER, 9 * sizeof( float ), points, GL_STATIC_DRAW );
-
-  GLuint vbzo = 0;
-  glGenBuffers( 1, &vbzo );
-  glBindBuffer( GL_ARRAY_BUFFER, vbzo );
-  glBufferData( GL_ARRAY_BUFFER, 3 * sizeof( int ), zog, GL_STATIC_DRAW );
-
-
-  
-  
-  GLuint vao = 0;
-  glGenVertexArrays( 1, &vao );
-  glBindVertexArray( vao );
-
-  glEnableVertexAttribArray( 0 );
-  glBindBuffer( GL_ARRAY_BUFFER, vbo );
-  glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, NULL );
-
-  //bind zorglub
-  glEnableVertexAttribArray( 1 );
-  glBindBuffer( GL_ARRAY_BUFFER, vbzo );
-  glVertexAttribIPointer( 1, 1, GL_INT, 0, NULL );
-
-
-  
-
-  auto vs = getVertexShader();
-  auto vs2 = getVertexShader2();
-  auto fs = getFragmentShader();
-  auto fs2 = getFragmentShader2();
-  
-  GLuint shader_program = glCreateProgram();
-  glAttachShader( shader_program, fs );
-  glAttachShader( shader_program, vs );
-  glLinkProgram( shader_program );
-  int clicked_loc = glGetUniformLocation( shader_program, "clicked" );
-
-  
-  GLuint shader_program2 = glCreateProgram();
-  glAttachShader( shader_program2, fs2 );
-  glAttachShader( shader_program2, vs2 );
-  glLinkProgram( shader_program2 );
 
 
   float da_points[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.f, 0.f};
 
-  GL2DPointsBasic mypts (da_points, sizeof(da_points)/2/sizeof(da_points[0]));
+  GL2DPointsBasic viewport (da_points, sizeof(da_points)/2/sizeof(da_points[0]));
 
-  //float da_1dpoints[] = {.0f, .025f, .05f, .1f, .15f, .2f, .25f, .3f};
-  
-  //GL1DPointsBasic mypts1d (da_1dpoints, sizeof(da_1dpoints)/sizeof(da_1dpoints[0]));
-
-  
   
   glfwSetKeyCallback(window, key_callback); // Register the key callback
 
@@ -205,24 +146,11 @@ void doSomeGL(GLFWwindow* window) {
     // Wipe the drawing surface clear.
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     
-    // Put the shader program, and the VAO, in focus in OpenGL's state machine.
-    //glUseProgram( shader_program );
-    //glUniform1i( clicked_loc, (flag?1:0));
-    //glBindVertexArray( vao );
-    
-    // Draw points 0-3 from the currently bound VAO with current in-use shader.
-    //    glDrawArrays( GL_TRIANGLES, 0, 3 );
-
-    //glCheckError();
- 
-    //draw again with other shader
-    //glUseProgram( shader_program2 );
-    //glDrawArrays( GL_TRIANGLES, 0, 3 );
  
 
     //points test
 
-    mypts.render();
+    viewport.render();
     //if (flag)
     //  mypts1d.render();
     log.render();
@@ -264,7 +192,7 @@ int main( void ) {
   glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
   // Create a window on the operating system, then tie the OpenGL context to it.
-  GLFWwindow* window = glfwCreateWindow( 800, 600, "Log Viz", NULL, NULL );
+  GLFWwindow* window = glfwCreateWindow( 1920, 1080, "Log Viz", NULL, NULL );
   if ( !window ) {
     fprintf( stderr, "ERROR: Could not open window with GLFW3.\n" );
     glfwTerminate();
