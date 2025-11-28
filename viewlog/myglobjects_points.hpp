@@ -35,9 +35,10 @@ class GL2DPointsBasic : public GLObjectBase {
   
   GLuint shader_program3;
   GLuint vao_points;
+  GLuint nbpoints;
 public:
   GL2DPointsBasic(float* data, size_t nbpoints) {
-    
+    this->nbpoints = nbpoints;
     GLuint vbo_points = 0;
     glGenBuffers( 1, &vbo_points );
     glBindBuffer( GL_ARRAY_BUFFER, vbo_points );
@@ -69,7 +70,7 @@ public:
     glBindVertexArray( vao_points );
 	
     glPointSize(10.);
-    glDrawArrays( GL_POINTS, 0, 8 );
+    glDrawArrays( GL_POINTS, 0,  nbpoints);
 
   }
   

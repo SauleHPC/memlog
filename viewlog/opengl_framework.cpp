@@ -146,13 +146,13 @@ void doSomeGL(GLFWwindow* window) {
   glLinkProgram( shader_program2 );
 
 
-  float da_points[] = {.0f, .0f, .0f, .1f, .1f, .1f, .2f, .2f, .2f, .3f, .3f, .3f};
+  float da_points[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f};
 
   GL2DPointsBasic mypts (da_points, sizeof(da_points)/2/sizeof(da_points[0]));
 
-  float da_1dpoints[] = {.0f, .025f, .05f, .1f, .15f, .2f, .25f, .3f};
+  //float da_1dpoints[] = {.0f, .025f, .05f, .1f, .15f, .2f, .25f, .3f};
   
-  GL1DPointsBasic mypts1d (da_1dpoints, sizeof(da_1dpoints)/sizeof(da_1dpoints[0]));
+  //GL1DPointsBasic mypts1d (da_1dpoints, sizeof(da_1dpoints)/sizeof(da_1dpoints[0]));
 
   
   
@@ -212,7 +212,7 @@ void doSomeGL(GLFWwindow* window) {
 
     //points test
 
-    //mypts.render();
+    mypts.render();
     //if (flag)
     //  mypts1d.render();
     log.render();
@@ -230,14 +230,14 @@ int main( void ) {
     return 1;
   }
 
-  // Request an OpenGL 4.1, core, context from GLFW.
+  // Request an OpenGL 4.6, core, context from GLFW.
   glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
   glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 6 );
   glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
   glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
   // Create a window on the operating system, then tie the OpenGL context to it.
-  GLFWwindow* window = glfwCreateWindow( 800, 600, "Hello Triangle", NULL, NULL );
+  GLFWwindow* window = glfwCreateWindow( 800, 600, "Log Viz", NULL, NULL );
   if ( !window ) {
     fprintf( stderr, "ERROR: Could not open window with GLFW3.\n" );
     glfwTerminate();
