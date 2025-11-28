@@ -61,7 +61,19 @@ void register_mouse_pos_callback(std::function<void (GLFWwindow* , int , int )> 
 void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos) {
   for (auto f : mouse_pos_callbacks)
     f(window, xpos, ypos);
+}
 
+
+std::vector<std::function<void (GLFWwindow* , int , int, int )> > mouse_button_callbacks;
+
+void register_mouse_button_callback(std::function<void (GLFWwindow* , int , int, int )> f) {
+  mouse_button_callbacks.push_back(f);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+  for (auto f : mouse_button_callbacks)
+    f(window, button, action, mods);
 }
 
 
@@ -100,6 +112,8 @@ void doSomeGL(GLFWwindow* window) {
 
   glfwSetCursorPosCallback(window, mouse_pos_callback);
 
+  glfwSetMouseButtonCallback(window, mouse_button_callback);
+
   register_mouse_pos_callback([](GLFWwindow* window, int xpos, int ypos) {
     auto [nx, ny] = screenPosToViewportNormalized(window, xpos, ypos);
 
@@ -112,6 +126,8 @@ void doSomeGL(GLFWwindow* window) {
     }
   });
 
+  register_mouse_button_callback([](GLFWwindow*, int, int, int)->void {std::cerr<<"click"<<'\n';});
+  
   Camera cam;
 
   register_key_callback ([&cam](GLFWwindow* window, int key, int scancode, int action, int mods) -> void{
