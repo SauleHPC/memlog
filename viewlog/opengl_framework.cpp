@@ -64,6 +64,25 @@ void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos) {
 
 }
 
+void queryViewport(GLFWwindow* window)
+{
+    // The viewport data is stored in an array of 4 integers:
+    // [0] = x_offset, [1] = y_offset, [2] = width, [3] = height
+    GLint viewport[4];
+    
+    // Query the current OpenGL viewport state
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    std::cout << "\nCurrent Viewport State:" << std::endl;
+    std::cout << "  X Offset (Bottom-Left): " << viewport[0] << std::endl;
+    std::cout << "  Y Offset (Bottom-Left): " << viewport[1] << std::endl;
+    std::cout << "  Width: " << viewport[2] << std::endl;
+    std::cout << "  Height: " << viewport[3] << std::endl;
+    
+    // Note: The OpenGL Y-axis is inverted relative to typical screen coordinates.
+    // The viewport's (0, 0) is the bottom-left corner of the window's OpenGL context.
+}
+
 void doSomeGL(GLFWwindow* window) {
   float da_points[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.f, 0.f};
 
@@ -76,6 +95,7 @@ void doSomeGL(GLFWwindow* window) {
 
   register_mouse_pos_callback([](GLFWwindow* window, int xpos, int ypos) {
     std::cout<<xpos<<" "<<ypos<<'\n';
+    queryViewport(window);
   });
   
   register_key_callback ([](GLFWwindow* window, int key, int scancode, int action, int mods) -> void{
