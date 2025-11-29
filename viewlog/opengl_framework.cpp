@@ -47,7 +47,37 @@ public:
   glm::mat4 inverse_matrix() const{
     return glm::inverse(camera_matrix);
   }
-  
+
+
+  void registerCallbacks() {
+      register_key_callback ([this](GLFWwindow* window, int key, int scancode, int action, int mods) -> void{
+    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+      this->wow();
+    }
+    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+      this->reset();
+    }
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+      this->translate(glm::vec3(+0.1, 0., 0.));
+    }
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+      this->translate(glm::vec3(-0.1, 0., 0.));
+    }
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
+      this->translate(glm::vec3(0., 0.1, 0.));
+    }
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
+      this->translate(glm::vec3(0., -0.1, 0.));
+    }
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+      this->zoom(1.1);
+    }
+    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+      this->zoom(1/1.1);
+    }
+  });
+
+  }
 };
 
 
@@ -78,6 +108,10 @@ std::tuple<float, float> screenPosToViewportNormalized(GLFWwindow* window, int x
   return {2*x3-1, 2*y3-1};
 }
 
+class logvisualizer {
+  
+};
+
 void doSomeGL(GLFWwindow* window) {
   float da_points[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.f, 0.f};
 
@@ -103,33 +137,7 @@ void doSomeGL(GLFWwindow* window) {
   });
   
   Camera cam;
-
-  register_key_callback ([&cam](GLFWwindow* window, int key, int scancode, int action, int mods) -> void{
-    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-      cam.wow();
-    }
-    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-      cam.reset();
-    }
-    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
-      cam.translate(glm::vec3(+0.1, 0., 0.));
-    }
-    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
-      cam.translate(glm::vec3(-0.1, 0., 0.));
-    }
-    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
-      cam.translate(glm::vec3(0., 0.1, 0.));
-    }
-    if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
-      cam.translate(glm::vec3(0., -0.1, 0.));
-    }
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
-      cam.zoom(1.1);
-    }
-    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
-      cam.zoom(1/1.1);
-    }
-  });
+  cam.registerCallbacks();
   
 
   auto  poscall = register_mouse_pos_callback([&cam](GLFWwindow* window, int xpos, int ypos) {
