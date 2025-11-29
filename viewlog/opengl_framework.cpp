@@ -112,6 +112,7 @@ class logvisualizer {
   std::string filename;
   loglibrary::log l;
   GL1DPointsBasic log;
+  size_t max_aftershift;
 public:
   logvisualizer(const std::string& logfile)
     : filename(logfile), l(loglibrary::log::parse_log(logfile)), log(nullptr, 0) {
@@ -132,10 +133,11 @@ public:
 	std::cout<<"max "<<m<<'\n';
 	for (auto& a: data) {
 	  a /= m;
-	  a *= .98;
-	  a += .01;
+	  //	  a *= .98;
+	  //	  a += .01;
 	  //      std::cout<<a<<"\n";
 	}
+	max_aftershift = m;
       }
       
       log.setData (&(data[0]), data.size());
@@ -144,13 +146,29 @@ public:
       
       //Mapping the GL1DPointsBasic to the full [-1;1]
       {
-	glm::mat4 Model;
-	Model = glm::translate(glm::mat4(1.0), glm::vec3(-.5, -.5, 0.));
-	Model = glm::scale(glm::mat4(1.0), glm::vec3(2., 2., 1.)) * Model;
-	log.setTransform(Model);
+	log.setTransform(getPointsTransform());
       }
-
   }
+
+  glm::mat4 getPointsTransform() const {
+    glm::mat4 Model;
+    Model = glm::translate(glm::mat4(1.0), glm::vec3(-.5, -.5, 0.));
+    Model = glm::scale(glm::mat4(1.0), glm::vec3(2., 2., 1.)) * Model;
+    return Model;
+  }
+
+  //convert coordinates in the object coordinate to a
+  std::tuple<size_t, void*> whatsat(float x, float y) {
+    auto reverse = glm::inverse(getPointsTransform());
+    glm::vec4 p (x, y, 1., 1.);
+    p = reverse * p;
+
+    size_t ind = p[0]*l.entries.size();
+    void* ptr = (void*)((size_t)(p[1]*(size_t)max_aftershift)+(size_t)l.offset);
+
+    return {ind, ptr};
+  }
+  
   void setCamera(const glm::mat4& tmat) {
     log.setCamera(tmat);
   }
@@ -186,21 +204,23 @@ void doSomeGL(GLFWwindow* window) {
   cam.registerCallbacks();
   
 
-  auto  poscall = register_mouse_pos_callback([&cam](GLFWwindow* window, int xpos, int ypos) {
+  
+  std::cout<<"GO!\n";
+
+  logvisualizer lv ("../log-1000");
+
+
+  
+  auto  poscall = register_mouse_pos_callback([&cam, &lv](GLFWwindow* window, int xpos, int ypos) {
     auto [nx, ny] = screenPosToViewportNormalized(window, xpos, ypos);
 
     std::cout<<xpos<<" "<<ypos<<" "<<nx<<" "<<ny<<'\n';
     glm::vec4 coord (nx, ny, 1., 1.);
     glm::vec4 in_world_coordinate = cam.inverse_matrix() * coord;
     std::cout<<"inverted: "<<in_world_coordinate[0]<<" "<<in_world_coordinate[1]<<" "<<in_world_coordinate[2]<<" "<<in_world_coordinate[3]<<'\n';
+    auto [ind, ptr] = lv.whatsat(in_world_coordinate[0], in_world_coordinate[1]);
+    std::cout<<"at: "<<ind<<" "<<ptr<<"\n";
   });
-
-  
-  std::cout<<"GO!\n";
-
-  logvisualizer lv ("../log-1000");
-  
-
 
   
   while ( !glfwWindowShouldClose( window ) ) {
