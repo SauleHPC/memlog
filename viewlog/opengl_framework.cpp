@@ -109,7 +109,55 @@ std::tuple<float, float> screenPosToViewportNormalized(GLFWwindow* window, int x
 }
 
 class logvisualizer {
-  
+  std::string filename;
+  loglibrary::log l;
+  GL1DPointsBasic log;
+public:
+  logvisualizer(const std::string& logfile)
+    : filename(logfile), l(loglibrary::log::parse_log(logfile)), log(nullptr, 0) {
+      l.stats();
+      l.shift_offset();
+      l.stats();
+      std::vector<float> data; //data will be a [0;1] encoding of the log
+      for (const auto& a : l.entries) {
+	data.push_back((float)((size_t)a.ptr));
+      }
+      
+      {
+	auto m = data[0];
+	for (auto& a: data) {
+	  if (a > m)
+	    m = a;
+	}
+	std::cout<<"max "<<m<<'\n';
+	for (auto& a: data) {
+	  a /= m;
+	  a *= .98;
+	  a += .01;
+	  //      std::cout<<a<<"\n";
+	}
+      }
+      
+      log.setData (&(data[0]), data.size());
+      log.setPointSize(1.);
+      log.setColor(1., 1., 1., 0.2);
+      
+      //Mapping the GL1DPointsBasic to the full [-1;1]
+      {
+	glm::mat4 Model;
+	Model = glm::translate(glm::mat4(1.0), glm::vec3(-.5, -.5, 0.));
+	Model = glm::scale(glm::mat4(1.0), glm::vec3(2., 2., 1.)) * Model;
+	log.setTransform(Model);
+      }
+
+  }
+  void setCamera(const glm::mat4& tmat) {
+    log.setCamera(tmat);
+  }
+
+  void render() {
+    log.render();
+  }
 };
 
 void doSomeGL(GLFWwindow* window) {
@@ -119,9 +167,7 @@ void doSomeGL(GLFWwindow* window) {
 
   
   glfwSetKeyCallback(window, key_callback); // Register the key callback
-
   glfwSetCursorPosCallback(window, mouse_pos_callback);
-
   glfwSetMouseButtonCallback(window, mouse_button_callback);
 
   
@@ -152,41 +198,9 @@ void doSomeGL(GLFWwindow* window) {
   
   std::cout<<"GO!\n";
 
-  loglibrary::log l = loglibrary::log::parse_log("../log-1000");
-  l.stats();
-  l.shift_offset();
-  l.stats();
-  std::vector<float> data; //data will be a [0;1] encoding of the log
-  for (const auto& a : l.entries) {
-    data.push_back((float)((size_t)a.ptr));
-  }
-
-  {
-    auto m = data[0];
-    for (auto& a: data) {
-      if (a > m)
-	m = a;
-    }
-    std::cout<<"max "<<m<<'\n';
-    for (auto& a: data) {
-      a /= m;
-      a *= .98;
-      a += .01;
-      //      std::cout<<a<<"\n";
-    }
-  }
+  logvisualizer lv ("../log-1000");
   
-  GL1DPointsBasic log (&(data[0]), data.size());
-  log.setPointSize(1.);
-  log.setColor(1., 1., 1., 0.2);
 
-  //Full screening the plot
-  {
-    glm::mat4 Model;
-    Model = glm::translate(glm::mat4(1.0), glm::vec3(-.5, -.5, 0.));
-    Model = glm::scale(glm::mat4(1.0), glm::vec3(2., 2., 1.)) * Model;
-    log.setTransform(Model);
-  }
 
   
   while ( !glfwWindowShouldClose( window ) ) {
@@ -197,11 +211,10 @@ void doSomeGL(GLFWwindow* window) {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     
-    log.setCamera(cam.getMatrix());//camera might have moved in the callbacks
+    lv.setCamera(cam.getMatrix());//camera might have moved in the callbacks
     
     viewport.render();
-    log.render();
- 
+    lv.render();
     
     // Put the stuff we've been drawing onto the visible area.
     glfwSwapBuffers( window );
