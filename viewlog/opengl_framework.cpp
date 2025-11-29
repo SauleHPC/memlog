@@ -8,7 +8,7 @@
 #include "myglobjects.hpp"
 #include "myglobjects_points.hpp"
 #include "logs.hpp"
-
+#include <list>
 
 class Camera {
   glm::mat4 camera_matrix;
@@ -51,12 +51,33 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     f(window, key, scancode, action, mods);
 }
 
-std::vector<std::function<void (GLFWwindow* , int , int )> > mouse_pos_callbacks;
+std::list<std::function<void (GLFWwindow* , int , int )> > mouse_pos_callbacks;
 
-void register_mouse_pos_callback(std::function<void (GLFWwindow* , int , int )> f) {
-  mouse_pos_callbacks.push_back(f);
+std::list<std::function<void (GLFWwindow* , int , int )> >::iterator register_mouse_pos_callback(std::function<void (GLFWwindow* , int , int )> f) {
+  auto iter = mouse_pos_callbacks.insert(mouse_pos_callbacks.begin(), f);
+  return iter;
 }
 
+
+template <typename T>
+bool is_iterator_in_list(const std::list<T>& list, 
+                             const typename std::list<T>::const_iterator& it_original) {
+    for (auto it_new_traversal = list.cbegin(); 
+         it_new_traversal != list.cend(); 
+         ++it_new_traversal) {
+        
+        if (it_new_traversal == it_original) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void unregister_mouse_pos_callback(std::list<std::function<void (GLFWwindow* , int , int )> >::iterator f_handle) {
+  if (is_iterator_in_list(mouse_pos_callbacks, f_handle))
+    mouse_pos_callbacks.erase(f_handle);
+}
 
 void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos) {
   for (auto f : mouse_pos_callbacks)
@@ -114,7 +135,7 @@ void doSomeGL(GLFWwindow* window) {
 
   glfwSetMouseButtonCallback(window, mouse_button_callback);
 
-  register_mouse_pos_callback([](GLFWwindow* window, int xpos, int ypos) {
+  auto  poscall = register_mouse_pos_callback([](GLFWwindow* window, int xpos, int ypos) {
     auto [nx, ny] = screenPosToViewportNormalized(window, xpos, ypos);
 
     std::cout<<xpos<<" "<<ypos<<" "<<nx<<" "<<ny<<'\n';
@@ -126,7 +147,10 @@ void doSomeGL(GLFWwindow* window) {
     }
   });
 
-  register_mouse_button_callback([](GLFWwindow*, int, int, int)->void {std::cerr<<"click"<<'\n';});
+  register_mouse_button_callback([&](GLFWwindow*, int, int action, int)->void {std::cerr<<"click"<<'\n';
+      if (action == GLFW_PRESS)
+	unregister_mouse_pos_callback(poscall);
+  });
   
   Camera cam;
 
