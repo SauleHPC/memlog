@@ -132,10 +132,13 @@ class GL1DPointsBasic : public GLObjectBase {
   GLint camera_transform_loc;
   GLfloat pointSize;
   float color[4];
+
 public:
-  GL1DPointsBasic(float* data, size_t nbpoints)
-    :nbpoints(nbpoints), pointSize(1.), color(1.0, 1.0, 1.0, 1.0)
-  {
+
+  void setData(float* data, size_t nbpoints) {
+    //TODO: clear out previous if necessary
+
+    this->nbpoints = nbpoints;
     GLuint vbo_points = 0;
     glGenBuffers( 1, &vbo_points );
     glBindBuffer( GL_ARRAY_BUFFER, vbo_points );
@@ -148,10 +151,19 @@ public:
     glEnableVertexAttribArray( 0 );
     glBindBuffer( GL_ARRAY_BUFFER, vbo_points );
     glVertexAttribPointer( 0, 1, GL_FLOAT, GL_FALSE, 0, NULL );
-    
+
+    glUseProgram( shader_program );
+    glUniform1f( nbpoints_loc, nbpoints); //you need the program to be "used" to write its variables
+    glCheckError();
+
+
+  }
+
+  GL1DPointsBasic(float* data, size_t nbpoints)
+    :nbpoints(0), pointSize(1.), color(1.0, 1.0, 1.0, 1.0)
+  {
     auto vs = getVertexShader();
     auto fs = getFragmentShader();
-
     
     this->shader_program = glCreateProgram();
     glAttachShader( shader_program, fs );
@@ -196,13 +208,10 @@ public:
     if (camera_transform_loc == GL_INVALID_OPERATION) {
       std::cerr<<"GL_INVALID_OPERATION"<<'\n';
     }
-
     
-    
-    glUseProgram( shader_program );
-    glUniform1f( nbpoints_loc, nbpoints); //you need the program to be "used" to write its variables
-    glCheckError();
     setColor(1.0, 1.0, 1.0, 1.0);
+    if (data != nullptr)
+      setData(data, nbpoints);
   }
 
   void setPointSize(GLfloat pointSize) {
@@ -240,6 +249,7 @@ public:
     glPointSize(pointSize);
     glDrawArrays( GL_POINTS, 0, nbpoints );
     glCheckError();
+    //std::cout<<"drawn: "<<nbpoints<<" points"<<'\n';
   }
   
   virtual ~GL1DPointsBasic() {
