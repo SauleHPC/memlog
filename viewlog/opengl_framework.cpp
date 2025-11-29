@@ -39,6 +39,15 @@ public:
     //    camera_matrix = camera_matrix * glm::scale(glm::mat4(1.0), glm::vec3(zoomlevel, zoomlevel, 1.));
     camera_matrix = glm::scale(glm::mat4(1.0), glm::vec3(zoomlevel, zoomlevel, 1.)) * camera_matrix;
   }
+
+  const glm::mat4& matrix() const{
+    return camera_matrix;
+  }
+
+  glm::mat4 inverse_matrix() const{
+    return glm::inverse(camera_matrix);
+  }
+  
 };
 
 
@@ -81,11 +90,6 @@ void doSomeGL(GLFWwindow* window) {
 
   glfwSetMouseButtonCallback(window, mouse_button_callback);
 
-  auto  poscall = register_mouse_pos_callback([](GLFWwindow* window, int xpos, int ypos) {
-    auto [nx, ny] = screenPosToViewportNormalized(window, xpos, ypos);
-
-    std::cout<<xpos<<" "<<ypos<<" "<<nx<<" "<<ny<<'\n';
-  });
   
   register_key_callback ([](GLFWwindow* window, int key, int scancode, int action, int mods) -> void{
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -94,8 +98,8 @@ void doSomeGL(GLFWwindow* window) {
   });
 
   register_mouse_button_callback([&](GLFWwindow*, int, int action, int)->void {std::cerr<<"click"<<'\n';
-      if (action == GLFW_PRESS)
-	unregister_mouse_pos_callback(poscall);
+      //      if (action == GLFW_PRESS)
+      //	unregister_mouse_pos_callback(poscall);
   });
   
   Camera cam;
@@ -127,6 +131,16 @@ void doSomeGL(GLFWwindow* window) {
     }
   });
   
+
+  auto  poscall = register_mouse_pos_callback([&cam](GLFWwindow* window, int xpos, int ypos) {
+    auto [nx, ny] = screenPosToViewportNormalized(window, xpos, ypos);
+
+    std::cout<<xpos<<" "<<ypos<<" "<<nx<<" "<<ny<<'\n';
+    glm::vec4 coord (nx, ny, 1., 1.);
+    glm::vec4 in_world_coordinate = cam.inverse_matrix() * coord;
+    std::cout<<"inverted: "<<in_world_coordinate[0]<<" "<<in_world_coordinate[1]<<" "<<in_world_coordinate[2]<<" "<<in_world_coordinate[3]<<'\n';
+  });
+
   
   std::cout<<"GO!\n";
 
