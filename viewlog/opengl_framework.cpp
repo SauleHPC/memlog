@@ -32,10 +32,12 @@ public:
   }
 
   void translate(const glm::vec3& vec) {
-    camera_matrix = camera_matrix * glm::translate(glm::mat4(1.0), vec);
+    //    camera_matrix = camera_matrix * glm::translate(glm::mat4(1.0), vec);
+        camera_matrix =  glm::translate(glm::mat4(1.0), vec) * camera_matrix ;
   }
   void zoom(const float& zoomlevel) {
-    camera_matrix = camera_matrix * glm::scale(glm::mat4(1.0), glm::vec3(zoomlevel, zoomlevel, 1.));
+    //    camera_matrix = camera_matrix * glm::scale(glm::mat4(1.0), glm::vec3(zoomlevel, zoomlevel, 1.));
+    camera_matrix = glm::scale(glm::mat4(1.0), glm::vec3(zoomlevel, zoomlevel, 1.)) * camera_matrix;
   }
 };
 
@@ -172,7 +174,8 @@ void doSomeGL(GLFWwindow* window) {
     // Wipe the drawing surface clear.
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    log.setCamera(cam.getMatrix());
+    
+    log.setCamera(cam.getMatrix());//camera might have moved in the callbacks
     
     viewport.render();
     log.render();
@@ -198,9 +201,6 @@ int foo()
 }
 
 int main( void ) {
-
-  //  std::cout<<foo();
-  
   // Start OpenGL context and OS window using the GLFW helper library.
   if ( !glfwInit() ) {
     fprintf( stderr, "ERROR: could not start GLFW3.\n" );
@@ -223,13 +223,11 @@ int main( void ) {
   glfwMakeContextCurrent( window );
                                   
   // Start Glad, so we can call OpenGL functions.
-  //int version_glad = gladLoadGL( glfwGetProcAddress );
   int version_glad = gladLoadGL( );
   if ( version_glad == 0 ) {
     fprintf( stderr, "ERROR: Failed to initialize OpenGL context.\n" );
     return 1;
   }
-  //  printf( "Loaded OpenGL %i.%i\n", GLAD_VERSION_MAJOR( version_glad ), GLAD_VERSION_MINOR( version_glad ) );
 
   // Try to call some OpenGL functions, and print some more version info.
   printf( "Renderer: %s.\n", glGetString( GL_RENDERER ) );
