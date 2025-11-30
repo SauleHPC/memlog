@@ -9,6 +9,8 @@
 #include "myglobjects_points.hpp"
 #include "logs.hpp"
 #include "callbacks.hpp"
+#include <chrono>
+#include <numeric>
 
 class Camera {
   glm::mat4 camera_matrix;
@@ -175,6 +177,36 @@ public:
   }
 };
 
+template <typename ClockType = std::chrono::system_clock::duration >
+class perf_log {
+  ClockType average;
+  size_t nb_event;
+  std::vector<ClockType> individual_recent_data;
+  int every;
+  bool log;
+  std::string name;
+  
+public:
+  perf_log(std::string name = "unknown")
+    :average(0), nb_event(0), individual_recent_data(), every(10), log(true), name(name) {
+    individual_recent_data.reserve(every);
+  }
+  
+  void addDataPoint(const ClockType& ct) {
+    individual_recent_data.push_back(ct);
+    if (individual_recent_data.size() == every) {
+      auto sum_me = std::accumulate(individual_recent_data.begin(), individual_recent_data.end(), ClockType(0));
+      
+      if (log) {
+	using seconds_double = std::chrono::duration<double>;
+	std::cerr<<name<<" "<<duration_cast<seconds_double>(sum_me/every)<<"\n";
+      }
+
+      individual_recent_data.clear();
+    }
+  }
+};
+
 void doSomeGL(GLFWwindow* window) {
   float da_points[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.f, 0.f};
 
@@ -218,14 +250,17 @@ void doSomeGL(GLFWwindow* window) {
     std::cout<<"at: "<<ind<<" "<<ptr<<"\n";
   });
 
-  
+  perf_log render_log ("render");
+  perf_log event_log ("render");
   while ( !glfwWindowShouldClose( window ) ) {
+    auto begin = std::chrono::system_clock::now();
     // Update window events.
     glfwPollEvents();
     
+    auto middle = std::chrono::system_clock::now();
+
     // Wipe the drawing surface clear.
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
     
     lv.setCamera(cam.getMatrix());//camera might have moved in the callbacks
     
@@ -234,6 +269,9 @@ void doSomeGL(GLFWwindow* window) {
     
     // Put the stuff we've been drawing onto the visible area.
     glfwSwapBuffers( window );
+    auto end = std::chrono::system_clock::now();
+    render_log.addDataPoint(end-middle);
+    event_log.addDataPoint(middle-begin);
   }
 }
 
