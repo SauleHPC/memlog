@@ -133,9 +133,6 @@ public:
 	std::cout<<"max "<<m<<'\n';
 	for (auto& a: data) {
 	  a /= m;
-	  //	  a *= .98;
-	  //	  a += .01;
-	  //      std::cout<<a<<"\n";
 	}
 	max_aftershift = m;
       }
@@ -195,9 +192,8 @@ void doSomeGL(GLFWwindow* window) {
     }
   });
 
-  register_mouse_button_callback([&](GLFWwindow*, int, int action, int)->void {std::cerr<<"click"<<'\n';
-      //      if (action == GLFW_PRESS)
-      //	unregister_mouse_pos_callback(poscall);
+  register_mouse_button_callback([&](GLFWwindow*, int, int action, int)->void {
+    std::cerr<<"click"<<'\n';
   });
   
   Camera cam;
